@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Network Bandwidth Measurement</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Network Bandwidth Measurement</h1>
+      <p class="subtitle">Measure download, upload, latency, and jitter from your browser.</p>
+
+      <section class="controls">
+        <button id="startBtn" type="button">Start Test</button>
+        <button id="stopBtn" type="button" disabled>Stop</button>
+      </section>
+
+      <p id="status" class="status">Ready to run.</p>
+
+      <section class="metrics">
+        <article class="metric-card">
+          <h2>Download</h2>
+          <p><span id="downloadValue">-</span> Mbps</p>
+        </article>
+        <article class="metric-card">
+          <h2>Upload</h2>
+          <p><span id="uploadValue">-</span> Mbps</p>
+        </article>
+        <article class="metric-card">
+          <h2>Latency</h2>
+          <p><span id="latencyValue">-</span> ms</p>
+        </article>
+        <article class="metric-card">
+          <h2>Jitter</h2>
+          <p><span id="jitterValue">-</span> ms</p>
+        </article>
+      </section>
+
+      <section class="notes">
+        <h3>Notes</h3>
+        <ul>
+          <li>Results vary with server load, browser activity, and local network usage.</li>
+          <li>Run multiple tests and compare average values for better confidence.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
