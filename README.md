@@ -64,5 +64,5 @@ It uses same-origin API endpoints to avoid CORS issues and improve result consis
 - Download/watch: [`demo.webm`](./demo.webm)
 - If your markdown renderer supports HTML video tags:
 
-<video src="./demo.webm" controls style="max-width: 100%;"></video>
+<video src="./demo.mp4" controls style="max-width: 100%;"></video>
 
