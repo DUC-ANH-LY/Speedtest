@@ -49,3 +49,20 @@ It uses same-origin API endpoints to avoid CORS issues and improve result consis
 - Browser/device load affects measurements.
 - Shared server resources can skew results.
 - Run multiple times and compare averages for better confidence.
+
+
+## Benchtest
+
+### Screenshots
+
+![Benchtest screenshot 1](./image1.png)
+
+![Benchtest screenshot 2](./image2.png)
+
+### Demo video
+
+- Download/watch: [`demo.webm`](./demo.webm)
+- If your markdown renderer supports HTML video tags:
+
+<video src="./demo.webm" controls style="max-width: 100%;"></video>
+

@@ -14,6 +14,22 @@ const TEST_CONFIG = {
   uploadSizeMb: 8
 };
 
+// Backend selection based on client geolocation (lat/lon).
+// Configure your measurement servers here with approximate coordinates.
+const SERVER_CANDIDATES = [
+  // Example servers – replace with your real endpoints:
+  // { baseUrl: "https://na.example.com", lat: 37.7749, lon: -122.4194 }, // North America
+  // { baseUrl: "https://eu.example.com", lat: 52.5200, lon: 13.4050 },   // Europe
+  // { baseUrl: "https://asia.example.com", lat: 1.3521, lon: 103.8198 }  // Asia
+];
+
+// Fallback backend if geolocation is unavailable or no servers configured.
+const DEFAULT_BACKEND = {
+  baseUrl: "http://54.90.119.71:3000"
+};
+
+let resolvedBackend = null;
+
 let controller = null;
 let isRunning = false;
 
@@ -44,13 +60,66 @@ function toMbps(bytes, durationMs) {
   return (bytes * 8) / seconds / 1_000_000;
 }
 
+
+function getClientPositionOnce() {
+  return new Promise((resolve) => {
+    if (!("geolocation" in navigator)) {
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        resolve({ lat: latitude, lon: longitude });
+      },
+      () => {
+        resolve(null);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 600000
+      }
+    );
+  });
+}
+
+async function selectNearestServer() {
+  // const position = await getClientPositionOnce();
+  // const { lat, lon } = position;
+  // const address = await reverseGeocode(lat, lon);
+  // console.log(address);
+  // if (address.address.country_code === "vn") { return "54.90.119.71:3000"; }
+  // if (address.address.country_code === "vn") { return "18.140.52.224:3000"; }
+  return "localhost:3000";
+}
+
+async function reverseGeocode(lat, lng) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+  return data;
+}
+
+async function buildApiUrl(path) {
+  const backend = await selectNearestServer();
+  console.log(backend);
+  return `http://${backend}${path}`;
+}
+
+var PING_URL = null;
+var DOWNLOAD_URL = null;
+var UPLOAD_URL = null;
+
 async function runPingTest(signal) {
   const latencies = [];
   for (let i = 0; i < TEST_CONFIG.pingSamples; i += 1) {
     updateStatus(`Measuring latency (${i + 1}/${TEST_CONFIG.pingSamples})...`);
 
     const startedAt = performance.now();
-    const response = await fetch(`http://localhost:3000/api/ping?t=${Date.now()}`, {
+    const response = await fetch(PING_URL, {
       method: "GET",
       cache: "no-store",
       signal
@@ -75,14 +144,11 @@ async function runDownloadTest(signal) {
     updateStatus(`Measuring download (${i + 1}/${TEST_CONFIG.downloadRounds})...`);
 
     const startedAt = performance.now();
-    const response = await fetch(
-      `http://localhost:3000/api/download?sizeMb=${TEST_CONFIG.downloadSizeMb}&t=${Date.now()}-${i}`,
-      {
-        method: "GET",
-        cache: "no-store",
-        signal
-      }
-    );
+    const response = await fetch(DOWNLOAD_URL, {
+      method: "GET",
+      cache: "no-store",
+      signal
+    });
     if (!response.ok) {
       throw new Error("Download test failed");
     }
@@ -110,7 +176,7 @@ async function runUploadTest(signal) {
     updateStatus(`Measuring upload (${i + 1}/${TEST_CONFIG.uploadRounds})...`);
 
     const startedAt = performance.now();
-    const response = await fetch("http://localhost:3000/api/upload", {
+    const response = await fetch(UPLOAD_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/octet-stream"
@@ -166,6 +232,13 @@ async function runFullTest() {
     setRunningState(false);
   }
 }
+
+window.addEventListener("load", async () => {
+  PING_URL = await buildApiUrl(`/api/ping?t=${Date.now()}`);
+  DOWNLOAD_URL = await buildApiUrl(`/api/download?sizeMb=${TEST_CONFIG.downloadSizeMb}&t=${Date.now()}`);
+  UPLOAD_URL = await buildApiUrl("/api/upload");
+  console.log(PING_URL, DOWNLOAD_URL, UPLOAD_URL);
+});
 
 startBtn.addEventListener("click", () => {
   if (isRunning) return;
